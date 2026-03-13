@@ -29,9 +29,7 @@ This project predicts the market price of used cars in Jordan based on 17 vehicl
 
 ## 🖼️ Screenshots
 
-> *(Add a screenshot of your web app here)*
-> `![App Screenshot](screenshots/app.png)`
-
+![site.png](screenshots/site.png)
 ---
 
 ## 🗂️ Project Structure
