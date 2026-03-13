@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jordanian Car Price Prediction</title>
+  <style>
+    :root {
+      --bg: #061426;
+      --bg-soft: #0b1f38;
+      --panel: rgba(12, 34, 61, 0.78);
+      --panel-strong: rgba(9, 27, 50, 0.95);
+      --border: rgba(126, 178, 255, 0.22);
+      --primary: #2f80ed;
+      --primary-2: #56ccf2;
+      --primary-3: #7cb8ff;
+      --text: #eef6ff;
+      --muted: #a8bfdc;
+      --success: #6ee7b7;
+      --shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+      --radius-xl: 28px;
+      --radius-lg: 18px;
+      --radius-md: 14px;
+      --max-width: 1220px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(86,204,242,0.16), transparent 28%),
+        radial-gradient(circle at 85% 15%, rgba(47,128,237,0.2), transparent 22%),
+        linear-gradient(180deg, #04111f 0%, #07192f 48%, #04101d 100%);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(124,184,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(124,184,255,0.04) 1px, transparent 1px);
+      background-size: 36px 36px;
+      pointer-events: none;
+      mask-image: linear-gradient(180deg, rgba(0,0,0,0.55), rgba(0,0,0,0.1));
+    }
+    a { color: inherit; text-decoration: none; }
+
+    .topbar {
+      position: sticky; top: 0; z-index: 50;
+      backdrop-filter: blur(16px);
+      background: rgba(4,17,31,0.76);
+      border-bottom: 1px solid rgba(126,178,255,0.12);
+    }
+    .nav {
+      width: min(94%, var(--max-width)); margin: 0 auto;
+      min-height: 76px; display: flex; align-items: center;
+      justify-content: space-between; gap: 20px;
+    }
+    .brand { display: flex; align-items: center; gap: 14px; font-weight: 700; }
+    .brand-mark {
+      width: 42px; height: 42px; border-radius: 14px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      box-shadow: 0 10px 26px rgba(47,128,237,0.36);
+      display: grid; place-items: center; font-size: 1.1rem;
+    }
+    .nav-links { display: flex; align-items: center; gap: 22px; color: var(--muted); font-size: 0.96rem; }
+    .nav-links a:hover { color: var(--text); }
+
+    .container { width: min(94%, var(--max-width)); margin: 0 auto; position: relative; z-index: 1; }
+    .hero { padding: 72px 0 34px; }
+    .hero-grid { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 28px; align-items: stretch; }
+    .hero-card, .info-card, .form-shell, .feature-card, .result-card {
+      background: linear-gradient(180deg, rgba(12,34,61,0.82), rgba(8,24,45,0.92));
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      border-radius: var(--radius-xl);
+    }
+    .hero-card { padding: 42px; overflow: hidden; position: relative; }
+    .hero-card::after {
+      content: "";
+      position: absolute; width: 280px; height: 280px; right: -60px; top: -50px;
+      background: radial-gradient(circle, rgba(86,204,242,0.22), transparent 68%);
+      border-radius: 50%;
+    }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 10px; padding: 8px 14px;
+      border-radius: 999px; background: rgba(126,178,255,0.08);
+      border: 1px solid rgba(126,178,255,0.18); color: var(--primary-3);
+      font-size: 0.88rem; margin-bottom: 18px;
+    }
+    h1 { font-size: clamp(2.2rem,5vw,4.2rem); line-height: 1.05; letter-spacing: -0.03em; max-width: 11ch; margin-bottom: 16px; }
+    .hero p { color: var(--muted); font-size: 1.04rem; max-width: 60ch; }
+    .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 26px; }
+    .btn, button { border: none; cursor: pointer; font: inherit; transition: 0.25s ease; }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      color: white; padding: 14px 22px; border-radius: 14px; font-weight: 700;
+      box-shadow: 0 14px 30px rgba(47,128,237,0.34);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 18px 34px rgba(47,128,237,0.4); }
+    .btn-secondary {
+      background: rgba(126,178,255,0.08); color: var(--text); padding: 14px 22px;
+      border-radius: 14px; border: 1px solid rgba(126,178,255,0.18);
+    }
+    .info-card { padding: 28px; display: flex; flex-direction: column; justify-content: space-between; gap: 20px; }
+    .info-card h3 { font-size: 1.35rem; margin-bottom: 8px; }
+    .metrics { display: grid; grid-template-columns: repeat(2,1fr); gap: 14px; }
+    .metric {
+      padding: 16px; border-radius: 16px;
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(126,178,255,0.12);
+    }
+    .metric span { display: block; font-size: 0.82rem; color: var(--muted); margin-bottom: 4px; }
+    .metric strong { font-size: 1.1rem; color: var(--success); }
+
+    .prediction-section { padding: 60px 0; }
+    .section-heading {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 20px; margin-bottom: 32px; flex-wrap: wrap;
+    }
+    .section-heading h2 { font-size: 1.7rem; margin-bottom: 6px; }
+    .section-heading p { color: var(--muted); }
+    .status-pill {
+      padding: 8px 16px; border-radius: 999px; background: rgba(110,231,183,0.1);
+      border: 1px solid rgba(110,231,183,0.25); color: var(--success);
+      font-size: 0.84rem; white-space: nowrap;
+    }
+    .form-shell { overflow: hidden; }
+    .form-top {
+      padding: 28px 32px 0; display: flex; align-items: flex-start;
+      justify-content: space-between; gap: 20px; margin-bottom: 28px;
+    }
+    .form-top h3 { font-size: 1.2rem; margin-bottom: 4px; }
+    .form-top .muted { color: var(--muted); font-size: 0.9rem; }
+    .prediction-form {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr));
+      gap: 20px; padding: 0 32px 32px;
+    }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: 0.86rem; color: var(--primary-3); font-weight: 600; }
+    .field select, .field input {
+      background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+      color: var(--text); border-radius: 12px; padding: 11px 14px;
+      font-size: 0.95rem; outline: none; width: 100%;
+      transition: border-color 0.2s, opacity 0.2s;
+    }
+    .field select:focus, .field input:focus { border-color: var(--primary); }
+    .field select:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+    .field select option { background: #07192f; color: var(--text); }
+    .field small { color: var(--muted); font-size: 0.78rem; }
+    .form-actions {
+      grid-column: 1 / -1; display: flex; align-items: center;
+      justify-content: flex-end; gap: 20px; flex-wrap: wrap; padding-top: 10px;
+    }
+    .predict-btn {
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      color: white; padding: 16px 48px; border-radius: 14px;
+      font-size: 1.05rem; font-weight: 700;
+      box-shadow: 0 14px 30px rgba(47,128,237,0.34); min-width: 180px;
+    }
+    .predict-btn:hover { transform: translateY(-2px); box-shadow: 0 18px 34px rgba(47,128,237,0.4); }
+    .predict-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .results-preview { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px,1fr)); gap: 24px; margin-top: 40px; }
+    .result-card { padding: 32px; }
+    .result-card h3 { font-size: 1.2rem; margin-bottom: 10px; }
+    .result-card > p { color: var(--muted); font-size: 0.93rem; margin-bottom: 20px; }
+    .price-box {
+      padding: 24px; border-radius: 18px;
+      background: rgba(47,128,237,0.09); border: 1px solid rgba(47,128,237,0.25);
+      text-align: center; margin-bottom: 20px;
+    }
+    .price-label { font-size: 0.82rem; color: var(--muted); display: block; margin-bottom: 8px; }
+    .price-value { font-size: 2.4rem; font-weight: 800; color: var(--success); letter-spacing: -0.02em; }
+    .price-range { font-size: 0.85rem; color: var(--muted); margin-top: 6px; }
+    .price-label-badge {
+      display: inline-block; padding: 5px 14px; border-radius: 999px;
+      background: rgba(110,231,183,0.12); border: 1px solid rgba(110,231,183,0.25);
+      color: var(--success); font-size: 0.82rem; margin-top: 8px;
+    }
+    .mini-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .mini-list li { display: flex; align-items: flex-start; gap: 10px; font-size: 0.9rem; color: var(--muted); }
+    .mini-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--primary); flex-shrink: 0; margin-top: 7px; }
+
+    .error-box {
+      padding: 16px 20px; border-radius: 14px;
+      background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
+      color: #fca5a5; font-size: 0.9rem; display: none;
+    }
+    .loading-spinner {
+      display: none; width: 22px; height: 22px; border: 3px solid rgba(255,255,255,0.2);
+      border-top-color: white; border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner-wrap { display: flex; align-items: center; gap: 12px; }
+
+    .insights { padding: 20px 0 60px; }
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap: 20px; }
+    .feature-card { padding: 28px; }
+    .feature-icon { font-size: 1.8rem; margin-bottom: 14px; }
+    .feature-card h3 { font-size: 1.05rem; margin-bottom: 8px; }
+    .feature-card p { color: var(--muted); font-size: 0.9rem; }
+
+    footer { padding: 30px 0; }
+    .footer-card {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 28px; border-radius: var(--radius-lg);
+      background: rgba(255,255,255,0.02); border: 1px solid var(--border);
+      color: var(--muted); font-size: 0.85rem; flex-wrap: wrap; gap: 10px;
+    }
+
+    @media (max-width: 720px) {
+      .hero-grid { grid-template-columns: 1fr; }
+      .prediction-form { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="topbar">
+  <nav class="nav container">
+    <div class="brand">
+      <div class="brand-mark">🚗</div>
+      <span>Jordanian Car Price Prediction Model</span>
+    </div>
+    <div class="nav-links">
+      <a href="#predictor">Predict</a>
+      <a href="#results">Results</a>
+    </div>
+  </nav>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="container">
+      <div class="hero-grid">
+        <div class="hero-card">
+          <div class="eyebrow">Jordan Car Market · AI-Powered</div>
+          <h1>Predict Used Car Prices Instantly</h1>
+          <p>Built on real scraped data from the Jordanian market. Enter your car details and get an instant AI-estimated price in Jordanian Dinars.</p>
+          <div class="hero-actions">
+            <a href="#predictor" class="btn btn-primary">Try the Predictor →</a>
+          </div>
+        </div>
+        <aside class="info-card">
+          <div>
+            <h3>Model Performance</h3>
+            <p style="color:var(--muted);font-size:0.9rem">CatBoost Regressor · Trained on Jordanian listings</p>
+          </div>
+          <div class="metrics">
+            <div class="metric"><span>Accuracy (R²)</span><strong>~87%</strong></div>
+            <div class="metric"><span>Algorithm</span><strong>CatBoost</strong></div>
+            <div class="metric"><span>Target</span><strong>JD Price</strong></div>
+            <div class="metric"><span>Inputs</span><strong>17 Fields</strong></div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <section class="prediction-section" id="predictor">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <h2>Vehicle Information Form</h2>
+          <p>Fill in all fields and click <strong>Predict</strong> to get an estimated market price.</p>
+        </div>
+        <div class="status-pill">✅ Model Ready</div>
+      </div>
+
+      <section class="form-shell">
+        <div class="form-top">
+          <div>
+            <h3>Enter Car Details</h3>
+            <p class="muted">All fields are required for the best prediction accuracy.</p>
+          </div>
+        </div>
+
+        <form class="prediction-form" id="predictionForm">
+
+          <!-- Car Make -->
+          <div class="field">
+            <label for="carMake">Car Make</label>
+            <select id="carMake" name="Car Make" required>
+              <option value="">Select make...</option>
+              <option>Hyundai</option><option>Kia</option><option>Toyota</option>
+              <option>Honda</option><option>Nissan</option><option>Mitsubishi</option>
+              <option>Ford</option><option>Chevrolet</option><option>GMC</option>
+              <option>Volkswagen</option><option>BMW</option><option>Mercedes Benz</option>
+              <option>Audi</option><option>Lexus</option><option>Land Rover</option>
+              <option>Jeep</option><option>Dodge</option><option>Mazda</option>
+              <option>Suzuki</option><option>Opel</option><option>Peugeot</option>
+              <option>Renault</option><option>Citroen</option><option>Fiat</option>
+              <option>Volvo</option><option>Porsche</option><option>Jaguar</option>
+              <option>Cadillac</option><option>Lincoln</option><option>Buick</option>
+              <option>Chrysler</option><option>Tesla</option><option>BYD</option>
+              <option>MG</option><option>Geely</option><option>Chery</option>
+              <option>Changan</option><option>Haval</option><option>Jetour</option>
+              <option>JAC</option><option>BAIC</option><option>GAC</option>
+              <option>Neta</option>
+              <option>Dongfeng</option><option>Genesis</option>
+              <option>Skoda</option><option>MINI</option>
+              <option>Smart</option><option>Lada</option>
+              <option>Daihatsu</option><option>Isuzu</option><option>Infiniti</option>
+              <option>Subaru</option><option>Samsung</option><option>Daewoo</option>
+              <option>Maserati</option><option>Ferrari</option><option>Bentley</option>
+              <option>Hummer</option><option>Wuling</option>
+              <option>Mahindra</option><option>Proton</option><option>Saturn</option>
+              <option>Mercury</option><option>JMC</option>
+            </select>
+          </div>
+
+          <!-- Model dropdown -->
+          <div class="field">
+            <label for="model">Model</label>
+            <select id="model" name="Model" required disabled>
+              <option value="">Select model...</option>
+            </select>
+            <small id="modelHint">Select the car make first</small>
+          </div>
+
+          <!-- Model Year -->
+          <div class="field">
+            <label for="modelYear">Model Year</label>
+            <select id="modelYear" name="Model Year" required>
+              <option value="">Select year...</option>
+              {% for year in range(2026, 1970, -1) %}
+              <option value="{{ year }}">{{ year }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Body Type -->
+          <div class="field">
+            <label for="bodyType">Body Type</label>
+            <select id="bodyType" name="Body Type" required>
+              <option value="">Select type...</option>
+              <option>Sedan</option><option>SUV</option><option>HatchBack</option>
+              <option>Coupe</option><option>Convertible</option>
+              <option>PickUp</option><option>Truck</option><option>Bus</option>
+            </select>
+          </div>
+
+          <!-- Fuel Type -->
+          <div class="field">
+            <label for="fuelType">Fuel Type</label>
+            <select id="fuelType" name="Fuel Type" required>
+              <option value="">Select fuel...</option>
+              <option>Gasoline</option><option>Diesel</option><option>Hybrid</option>
+              <option>Electric</option><option>Mild Hybrid</option><option>Plug-in Hybrid</option>
+            </select>
+          </div>
+
+          <!-- Transmission -->
+          <div class="field">
+            <label for="transmission">Transmission</label>
+            <select id="transmission" name="Transmission" required>
+              <option value="">Select...</option>
+              <option>Automatic</option><option>Manual</option>
+            </select>
+          </div>
+
+          <!-- Engine Size -->
+          <div class="field">
+            <label for="engineSize">Engine Size</label>
+            <select id="engineSize" name="Engine Size (cc)" required>
+              <option value="">Select size...</option>
+              <option value="0">0 (Electric)</option>
+              <option>0 - 499 cc</option>
+              <option>500 - 999 cc</option>
+              <option>1,000 - 1,999 cc</option>
+              <option>2,000 - 2,999 cc</option>
+              <option>3,000 - 3,999 cc</option>
+              <option>4,000 - 4,999 cc</option>
+              <option>5,000 - 5,999 cc</option>
+              <option>More than 6,000 cc</option>
+            </select>
+          </div>
+
+          <!-- Mileage -->
+          <div class="field">
+            <label for="mileage">Mileage</label>
+            <select id="mileage" name="Mileage" required>
+              <option value="">Select mileage...</option>
+              <option>0 km</option><option>1 - 999 km</option>
+              <option>1,000 - 9,999 km</option><option>10,000 - 19,999 km</option>
+              <option>20,000 - 29,999 km</option><option>30,000 - 39,999 km</option>
+              <option>40,000 - 49,999 km</option><option>50,000 - 59,999 km</option>
+              <option>60,000 - 69,999 km</option><option>70,000 - 79,999 km</option>
+              <option>80,000 - 89,999 km</option><option>90,000 - 99,999 km</option>
+              <option>100,000 - 109,999 km</option><option>110,000 - 119,999 km</option>
+              <option>120,000 - 129,999 km</option><option>130,000 - 139,999 km</option>
+              <option>140,000 - 149,999 km</option><option>150,000 - 159,999 km</option>
+              <option>160,000 - 169,999 km</option><option>170,000 - 179,999 km</option>
+              <option>180,000 - 189,999 km</option><option>190,000 - 199,999 km</option>
+              <option>+200,000 km</option>
+            </select>
+          </div>
+
+          <!-- Body Condition -->
+          <div class="field">
+            <label for="bodyCondition">Body Condition</label>
+            <select id="bodyCondition" name="Body Condition" required>
+              <option value="">Select condition...</option>
+              <option value="Excellent">Excellent (no defects)</option>
+              <option value="Good">Good (minor blemishes)</option>
+              <option value="Fair">Fair (body needs work)</option>
+              <option value="Poor">Poor (severe damages)</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <!-- Paint -->
+          <div class="field">
+            <label for="paint">Paint</label>
+            <select id="paint" name="Paint" required>
+              <option value="">Select paint...</option>
+              <option>Original Paint</option>
+              <option>Partially repainted</option>
+              <option>Total repaint</option>
+              <option>Other</option>
+            </select>
+          </div>
+
+          <!-- Condition -->
+          <div class="field">
+            <label for="condition">Car Condition</label>
+            <select id="condition" name="Condition" required>
+              <option value="">Select...</option>
+              <option>Used</option><option>New</option>
+            </select>
+          </div>
+
+          <!-- Car License -->
+          <div class="field">
+            <label for="carLicense">Car License</label>
+            <select id="carLicense" name="Car License" required>
+              <option value="">Select...</option>
+              <option>Licensed</option><option>Not Licensed</option>
+            </select>
+          </div>
+
+          <!-- Car Customs -->
+          <div class="field">
+            <label for="carCustoms">Car Customs</label>
+            <select id="carCustoms" name="Car Customs" required>
+              <option value="">Select...</option>
+              <option>With Customs</option><option>Without Customs</option>
+            </select>
+          </div>
+
+          <!-- Insurance -->
+          <div class="field">
+            <label for="insurance">Insurance</label>
+            <select id="insurance" name="Insurance" required>
+              <option value="">Select...</option>
+              <option>Compulsory Insurance</option>
+              <option>Comprehensive Insurance</option>
+              <option>Not Insured</option>
+            </select>
+          </div>
+
+          <!-- Market Specifications -->
+          <div class="field">
+            <label for="marketSpec">Market Specifications</label>
+            <select id="marketSpec" name="Market Specifications" required>
+              <option value="">Select specs...</option>
+              <option>GCC Specs</option><option>American Specs</option>
+              <option>Korean Specs</option><option>European Specs</option>
+              <option>Japanese Specs</option><option>Chinese Specs</option>
+              <option>Other Specs</option>
+            </select>
+          </div>
+
+          <!-- Battery Capacity -->
+          <div class="field">
+            <label for="batteryCapacity">Battery Capacity</label>
+            <select id="batteryCapacity" name="Battery Capacity">
+              <option value="N/A">N/A (not electric)</option>
+              <option>Less than 50 kWh</option><option>50 - 69 kWh</option>
+              <option>70 - 89 kWh</option><option>90 - 99 kWh</option>
+              <option>More than 100 kWh</option>
+            </select>
+            <small>Only for electric/hybrid vehicles</small>
+          </div>
+
+          <!-- Battery Range -->
+          <div class="field">
+            <label for="batteryRange">Battery Range</label>
+            <select id="batteryRange" name="Battery Range">
+              <option value="N/A">N/A (not electric)</option>
+              <option>Less than 100 km</option><option>100 - 199 km</option>
+              <option>200 - 299 km</option><option>300 - 399 km</option>
+              <option>400 - 499 km</option><option>More than 500 km</option>
+            </select>
+            <small>Only for electric/hybrid vehicles</small>
+          </div>
+
+          <!-- Actions -->
+          <div class="form-actions">
+            <div id="errorBox" class="error-box"></div>
+            <div class="spinner-wrap">
+              <div class="loading-spinner" id="spinner"></div>
+            </div>
+            <button type="submit" class="predict-btn" id="predictBtn">
+              🔍 Predict Price
+            </button>
+          </div>
+
+        </form>
+      </section>
+
+      <div class="results-preview" id="results">
+        <article class="result-card" id="resultCard">
+          <h3>Prediction Result</h3>
+          <p>Submit the form above to see the AI-estimated market price for your car.</p>
+          <div class="price-box" id="priceBox">
+            <span class="price-label">Estimated Market Price</span>
+            <div class="price-value" id="priceValue">JD —</div>
+            <div class="price-range" id="priceRange"></div>
+            <div id="priceLabelBadge"></div>
+          </div>
+          <ul class="mini-list">
+            <li><span class="mini-dot"></span><span>Price range shows ±10% confidence interval.</span></li>
+            <li><span class="mini-dot"></span><span>Based on real Jordanian market listings.</span></li>
+            <li><span class="mini-dot"></span><span>CatBoost model — R² ≈ 87%.</span></li>
+          </ul>
+        </article>
+
+        <article class="result-card">
+          <h3>Tips for a Better Estimate</h3>
+          <p>Improve accuracy with these steps:</p>
+          <ul class="mini-list">
+            <li><span class="mini-dot"></span><span>Use the exact model name as listed on the Jordanian market.</span></li>
+            <li><span class="mini-dot"></span><span>Choose "With Customs" for most imported cars.</span></li>
+            <li><span class="mini-dot"></span><span>Accurate mileage range has a strong impact on price.</span></li>
+            <li><span class="mini-dot"></span><span>Electric/Hybrid cars require battery capacity & range.</span></li>
+          </ul>
+        </article>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="insights" id="insights">
+    <div class="container">
+      <div class="section-heading">
+        <div>
+          <h2>About This Project</h2>
+          <p>A complete ML pipeline from scraping to deployment.</p>
+        </div>
+      </div>
+      <div class="features-grid">
+          <article class="feature-card">
+            <div class="feature-icon">📊</div>
+            <h3>Real Jordanian Data</h3>
+            <p>Scraped from local car listings with thousands of entries, cleaned and preprocessed for high-quality predictions.</p>
+          </article>
+
+          <article class="feature-card">
+            <div class="feature-icon">⚡</div>
+            <h3>CatBoost Model</h3>
+            <p>Gradient boosting algorithm optimised for categorical data — achieving ~87% R² accuracy on the test set.</p>
+          </article>
+
+          <article class="feature-card">
+            <div class="feature-icon">🛡️</div>
+            <h3>Smart ETL Pipeline</h3>
+            <p>Ordinal encoding, target encoding for brand & model, one-hot encoding, and StandardScaler — all applied in real time.</p>
+          </article>
+
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="container">
+    <div class="footer-card">
+      <span>Jordanian Car Price Prediction Project 🇯🇴</span>
+      <span>Built with Flask · CatBoost · Real Market Data</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const carModels = {
+    "Audi": ["e-tron","A4","Q4 e-tron","Q5","Q7","A3","Q2","A5","A7","A8","A6","Other","TT"],
+    "BAIC": ["X Series","EU Series","Other","Senova X Series"],
+    "BMW": ["5 Series","3 Series","X6 Series","7 Series","iX Series","X5 Series","4 Series","X7 Series","Other","XM Series","2 Series","X3 Series","X1 Series","Z Series","1 Series"],
+    "BYD": ["Seagull","Destroyer 05","Yuan","Qin","E2","Tang","Seal","Song Pro","Song Plus","Leopard 8","Dolphin","Song L","Other","Leopard 5","Han","E3","F0","E6","Shark 6","Atto 3","F5"],
+    "Bentley": ["Continental"],
+    "Buick": ["Regal"],
+    "Cadillac": ["BLS","CTS/Catera","Other","Escalade","ATS","CT5","SRX"],
+    "Changan": ["Eado","E-Star","SL03","CX30","Sania","Eado EV","Deepal","Eado DT","CS95","Other","Alsvin","CS85","UNI-T","UNI-K"],
+    "Chery": ["Other","QQ","Tiggo","iCar","Arrizo"],
+    "Chevrolet": ["Spark","Cruze","Bolt","Silverado","Blazer","Sonic","Malibu","Trax","Tahoe","Camaro","Cobalt","Aveo","Captiva","Optra","Trailblazer","Menlo","Traverse","Lumina","Caprice","Impala","Equinox","Cavalier","Epica","Chevelle","HHR","Colorado","Groove","Other","Suburban"],
+    "Chrysler": ["300","Sebring","Grand Voyager","200"],
+    "Citroen": ["Xsara","C4","C5","C3","C2","C8","Nemo","Berlingo","Other"],
+    "Daewoo": ["Lanos","Nubira","Espero","Matiz","Lacetti","Racer","LeMans","Gentra","Damas","Kalos","Cielo","Arcadia","Leganza"],
+    "Daihatsu": ["Charade","Sirion","Mira","Terios","Other","Delta","YRV","Feroza","Copen","Grand Terios"],
+    "Dodge": ["Ram","Challenger","Charger","Avenger","Durango","Nitro","Caliber","Caravan"],
+    "Dongfeng": ["EX1","Nammi Box","D60","Other","Box","Forthing","Venucia","Huge","007","E70"],
+    "Fiat": ["500","Doblo","Other","Panda","Palio","Punto"],
+    "Ford": ["F-150","Expedition","Fusion","Explorer","Focus","Bronco","Escape","C-MAX","Ranger","Mustang","Figo","Edge","Mondeo","F-150 Lightning","Crown Victoria","Other","Maverick","Territory","Mach-E","Escort","Taurus","Super Duty","Ecosport"],
+    "GAC": ["GS3","Aion","EMKOO"],
+    "GMC": ["Envoy","Yukon","Sierra","Acadia","Terrain","Suburban","Other"],
+    "Geely": ["Geometry C","GX2","GC6","GC7","Radar","Geometry E","Coolray","Azkarra","Okavango"],
+    "Genesis": ["Other","G70","GV70","GV60","G80"],
+    "Haval": ["H6","H9"],
+    "Honda": ["Civic","Accord","Pilot","e:N","HR-V","Jazz","CR-V","City","Insight","CR-Z","Clarity","Other","Odyssey"],
+    "Hyundai": ["Tucson","Kona","Elantra","Avante","Sonata","Ioniq","Accent","Azera","H1","Centennial","Creta","Verna","H 100","Other","Porter","i10","Veloster","Santa Fe","Matrix","Santamo","Tucson","Getz","Atos","Trajet","Grand i10","Veracruz","Excel","Grand Santa Fe","i30","i20","Coupe","Grandeur","Tiburon","Reina","Santa Cruz","Staria"],
+    "Infiniti": ["FX35","QX80","G35","QX60","QX70","Q50"],
+    "Isuzu": ["D-Max","Trooper","Other","MU-X"],
+    "JAC": ["Aion","JS3","Other","GE3","E10X","e-JS1"],
+    "JMC": ["Vigus"],
+    "Jaguar": ["XF","F-Pace","X-Type","XE","S-Type","E-Pace","F-Type","XJ"],
+    "Jeep": ["Compass","Grand Cherokee","Gladiator","Grand Cherokee L","Wrangler","Cherokee","Other","Liberty","Commander"],
+    "Jetour": ["T2","X70S","Other","X70"],
+    "Kia": ["Sephia","Spectra","Niro","K3","Morning","Picanto","Optima","Sorento","Niro EV","EV5","K5","Cerato","Rio","Pride","Sportage","EV6","Carnival","Forte","Soul","Lotze","Shuma","Other","Pregio","Pegas","K8","Besta","Cadenza","Joice","Avila","Carens","Oprius","Carnival MPV","Quoris","Ray","Seltos"],
+    "Lada": ["Samara","Other","Granta","Niva Travel","Niva Legend"],
+    "Land Rover": ["Range Rover","HSE V8","Range Rover Evoque"],
+    "Lexus": ["RX","ES","CT","LX","HS","NX","IS","GS","UX"],
+    "Lincoln": ["MKZ","Other","Navigator","MKC","Mark","MKX"],
+    "MG": ["MG RX8","MG 5","MG 4 EV","T60","MG ZS","MG RX5","MG GT","MG HS","MG eHS","Other","MG 3","MG ZS EV","MG 6"],
+    "MINI": ["Coupe","Countryman","Other"],
+    "Mahindra": ["Scorpio-N","Other","XUV400","KUV100 NXT"],
+    "Maserati": ["Quattroporte"],
+    "Mazda": ["2","3","6","CX-5","CX-9","Other","CX-30","323","BT-50"],
+    "Mercedes Benz": ["C-Class","S-Class","E-Class"],
+    "Mercury": ["Mountaineer","Milan"],
+    "Mitsubishi": ["Lancer","L200","Pajero","Outlander","Mirage","Pajero Sport","Canter","ASX","Fuso","Galant","Other","Nativa","Evolution","3000GT","Colt","i-MiEV","Lancer Evolution","Xpander Cross","Space Wagon","Van","Fuso Rosa"],
+    "Neta": ["U","GT","V","Aya","Other","S"],
+    "Nissan": ["Navara","Datsun","Sentra","X-Trail","Ariya","Sunny","Kicks","Micra","Leaf","Patrol","Pathfinder","Rogue","Murano","Qashqai","Altima","X-Terra","Sylphy","Other","Juke","Versa","Tiida","Maxima","Primera","Armada"],
+    "Opel": ["Kadett","Vectra","Omega","Astra","Insignia","Corsa","Campo","Calibra","Other","Combo","Vita","Zafira","Grandland"],
+    "Peugeot": ["208","Partner","3008","407","206","207","307","301","Expert","406","306","1007","2008","Landtrek","E-208","508","Boxer","308","208 GT LINE","607","E-2008","107","106","Rifter","3008 GT LINE","Other"],
+    "Porsche": ["Macan","Cayenne","Panamera","718","Taycan","911"],
+    "Proton": ["Saga"],
+    "Renault": ["Clio","Megane","Logan","Fluence","Safrane","Duster","Dokker","Express","Zoe","Other","Sandero","Laguna","Koleos"],
+    "Samsung": ["SM5","SM3","QM3"],
+    "Saturn": ["Vue"],
+    "Skoda": ["Octavia","Felicia","Fabia","spaceback","Superb"],
+    "Smart": ["Other","EQ","Smart #1"],
+    "Subaru": ["Impreza","BRZ","Other","Legacy","WRX"],
+    "Suzuki": ["Grand Vitara","Vitara","Alto","Other","Aerio","XL7","Baleno","Swift","Jimny","Ciaz","Celerio"],
+    "Tesla": ["Model 3","Cybertruck","Model X","Model S","Model Y"],
+    "Toyota": ["Hilux","Prius","Land Cruiser","Highlander","C-HR","RAV 4","Yaris","Camry","Corolla Cross","Avalon","Corolla","Fortuner","bZ","GR","Prado","Venza","Dyna","Tercel","Other","Avanza","Previa","Tundra","Crown","Sienna","Hiace","Echo","Cressida","Urban Cruiser","4 Runner","Corona","FJ","Celica","Aygo","Sequoia","Auris","IQ"],
+    "Volkswagen": ["ID 4","Golf","ID 6","Bora","Caddy","Golf GTI","Jetta","Scirocco","ID 3","Golf MK","Touareg","Lavida","1500","Passat","Tiguan","Beetle","Fox","ID 7","Other","Polo","Teramont","Golf R","Sharan","e-tharu","Suran","Transporter","Jetta GLI","Eos","Iltis","ID 5"],
+    "Volvo": ["S 80","S 40","Other","S 60"],
+    "Wuling": ["GameBoy","Air EV"]
+  };
+
+  const form = document.getElementById('predictionForm');
+  const predictBtn = document.getElementById('predictBtn');
+  const spinner = document.getElementById('spinner');
+  const errorBox = document.getElementById('errorBox');
+  const priceValue = document.getElementById('priceValue');
+  const priceRange = document.getElementById('priceRange');
+  const priceLabelBadge = document.getElementById('priceLabelBadge');
+
+  const carMakeSelect = document.getElementById('carMake');
+  const modelSelect = document.getElementById('model');
+  const modelHint = document.getElementById('modelHint');
+
+  function populateModels(make) {
+    modelSelect.innerHTML = '<option value="">Select model...</option>';
+
+    if (!make) {
+      modelSelect.disabled = true;
+      modelHint.textContent = 'Select the car make first';
+      return;
+    }
+
+    const models = carModels[make];
+
+    if (!models || models.length === 0) {
+      modelSelect.disabled = true;
+      modelHint.textContent = 'No models available for this make';
+      return;
+    }
+
+    models.forEach(model => {
+      const option = document.createElement('option');
+      option.value = model.trim();
+      option.textContent = model.trim();
+      modelSelect.appendChild(option);
+    });
+
+    modelSelect.disabled = false;
+    modelHint.textContent = 'Choose the exact model from the list';
+  }
+
+  carMakeSelect.addEventListener('change', function () {
+    populateModels(this.value);
+  });
+
+  function formatJD(n) {
+    return 'JD ' + Number(n).toLocaleString('en-US');
+  }
+
+  form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const formData = new FormData(form);
+    const payload = Object.fromEntries(formData.entries());
+
+    if (payload['Battery Capacity'] === 'N/A') payload['Battery Capacity'] = '0';
+    if (payload['Battery Range'] === 'N/A') payload['Battery Range'] = '0';
+
+    errorBox.style.display = 'none';
+    predictBtn.disabled = true;
+    spinner.style.display = 'block';
+    predictBtn.textContent = 'Predicting...';
+    priceValue.textContent = 'JD —';
+    priceRange.textContent = '';
+    priceLabelBadge.innerHTML = '';
+
+    try {
+      const res = await fetch('/predict', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || data.error) {
+        throw new Error(data.error || 'Prediction failed');
+      }
+
+      priceValue.textContent = formatJD(data.price);
+      priceRange.textContent = `Range: ${formatJD(data.price_low)} – ${formatJD(data.price_high)}`;
+      priceLabelBadge.innerHTML = `<span class="price-label-badge">✅ ${data.label}</span>`;
+
+      document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    } catch(err) {
+      errorBox.textContent = '⚠️ ' + err.message;
+      errorBox.style.display = 'block';
+    } finally {
+      predictBtn.disabled = false;
+      spinner.style.display = 'none';
+      predictBtn.textContent = '🔍 Predict Price';
+    }
+  });
+</script>
+
+</body>
+</html>
